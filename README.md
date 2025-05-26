@@ -141,13 +141,13 @@ Each backup job will create a readme file in the same folder as the backup, deta
 ```
 # cat /var/lib/libvirt/images/backups/myvm.howtorestore.txt
 
-This readme file describes how to restore a backup created by the /root/vm_backup.sh.nicktest script.
+This readme file describes how to restore a backup created by the /root/kvm_cold_backup.sh script.
 
 The following commands should be run on the standby host:
 
 1. Check to see if the virtual machine definition already exists:
    /bin/virsh list --all
-   /bin/virsh dominfo $vm_name
+   /bin/virsh dominfo myvm
 
 2. If the virtual machine definition already exists, please delete it:
    /bin/virsh undefine myvm
