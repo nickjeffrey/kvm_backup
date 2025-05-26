@@ -53,6 +53,11 @@ Each VM has its own cron entry, with the high-level steps looking similar to:
 
 Depending on the availabilility of NAS storage or alternate KVM hosts in your environment, you can send backups to any or all of the above.
 
+You can choose any or all of the backup destinations, but it is highly recommended that you backup to a local disk directly on the KVM host, because these are "cold" backups taken while the VM is powered down.
+
+Since you want to minimize the time the VM is down, copying to a local disk is typically faster than copying to a network-based location.
+
+HINT: If you backup to a local disk, the script will automatically start the VM after the local disk backup is completed, and will then continue with the (optional) copies to a remote NFS share or alternate KVM host.
 
 
 # Installation
