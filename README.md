@@ -272,4 +272,4 @@ Please note that live migration does have a few prerequisites:
 1) Source and target directory structures / storage pools must be identical
 2) Same networks must be on the source and target hosts
 3) SSH key pair auth already configured
-4) QEMU uses the nbd (Network Block Device) protocol over a high TCP port (default range: 49152–49215) for transferring disk images during storage migration (--copy-storage-all).  This means the firewall This means that the target KVM host will need to allow incoming traffic on those ports.  
+4) QEMU uses the nbd (Network Block Device) protocol over a high TCP port (default range: 49152–49215) for transferring disk images during storage migration (--copy-storage-all).  This means the firewall on thetarget KVM host will need to allow incoming traffic on those ports.  
