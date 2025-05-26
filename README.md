@@ -272,4 +272,13 @@ Please note that live migration does have a few prerequisites:
 1) Source and target directory structures / storage pools must be identical
 2) Same networks must be on the source and target hosts
 3) SSH key pair auth already configured
-4) QEMU uses the nbd (Network Block Device) protocol over a high TCP port (default range: 49152–49215) for transferring disk images during storage migration (--copy-storage-all).  This means the firewall on the target KVM host will need to allow incoming traffic on those ports.  
+4) QEMU uses the nbd (Network Block Device) protocol over a high TCP port (default range: 49152–49215) for transferring disk images during storage migration (--copy-storage-all).  This means the firewall on the target KVM host will need to allow incoming traffic on those ports.
+
+### Q: These full backups take up loads of space on my NAS.  Is there anything I can do for better storage efficiency?
+
+A: This script is very simple, just a bash script that runs from cron.  If you need something with more features, here are a few popular options:
+- https://github.com/abbbi/virtnbdbackup
+- Proxmox Backup Server (PBS)   (assumes you are using Proxmox)
+- Xen Orchestra  (assumes you are using Xen or XCP-NG
+- Veeam (pricey)
+- Storware 
