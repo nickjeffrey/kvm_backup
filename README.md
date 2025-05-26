@@ -136,27 +136,27 @@ The following commands should be run on the standby host:
    /bin/virsh dominfo $vm_name
 
 2. If the virtual machine definition already exists, please delete it:
-   /bin/virsh undefine centos10test
+   /bin/virsh undefine myvm
 
 3. It is highly preferred that the directory paths be identical on all KVM hosts.
    If the directory paths are not identical on the source and targer machines,
-   you must manually edit the centos10test.xml file before the next step.
+   you must manually edit the myvm.xml file before the next step.
 
 4. Create the virtual machine definition:
-   /bin/virsh define --file /path/to/backup/centos10test/yyyymmdd/centos10test.xml
+   /bin/virsh define --file /path/to/backup/myvm/yyyymmdd/myvm.xml
 
 5. If the *.qcow2 file is gzipped, uncompress the file:
-   cd /path/to/backup/centos10test/yyyymmdd
+   cd /path/to/backup/myvm/yyyymmdd
    find . -type f -name "*.qcow2.gz" -exec gunzip {} \;
 
 6. Copy the *.qcow2 disk image file to the appropriate directory:
-   cp /path/to/backup/centos10test/yyyymmdd/*.qcow2 /to/appropriate/location/
+   cp /path/to/backup/myvm/yyyymmdd/*.qcow2 /to/appropriate/location/
 
 7. If desired, startup the virtual machine. NOTE: due to duplicate MAC addresses,
    do not start up the standby VM if the primary VM is still running!
-   /bin/virsh start centos10test
+   /bin/virsh start myvm
    /bin/virsh list --all
-   /bin/virsh dominfo $vm_name
+   /bin/virsh dominfo myvm
 ```
 
 # Q & A
