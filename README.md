@@ -21,7 +21,7 @@ Each VM has its own cron entry, with the high-level steps looking similar to:
 
 This option is essentially the same process as the previous option, but the backups go to an NFS-mounted filesystem instead of a local filesystem.  
 
-This provides hardware redundancy, but since these are all "cold" backups, and local disk is usually faster than network, each VM will have a longer outage during hte cold backup.
+This provides hardware redundancy, but since these are all "cold" backups, and local disk is usually faster than network, each VM will have a longer outage during the cold backup.
 
 In this scenario, it is assumed that the backups are sent to a NAS or some other network storage providing an NFS export.  It is assumed that the KVM host already has the NFS filesystem mounted onto a local mount point.
 
