@@ -195,7 +195,7 @@ A: Hot backup options exist, but are outside the scope of this script.
 
 A: These are all full cold backups, no incrementals or differentials, so you will need the same amount of space as all your VMs, multiplied by the number of backup generations you want to keep.  Note that if your source virtual disk files are thin-provisioned sparse files, the backups will be as well.  You might also consider sending the backups to a deduplicating filesystem (ie NetApp, DataDomain, etc) for storage efficiencies.
 
-### Q: How will I know if the backup succeeds.
+### Q: How will I know if the backup succeeds?  Or how long the backup takes?
 
 A: The backup job creates a verbose logfile, which which is (optionally) emailed to the sysadmin as a report of the backup status.  An example report is shown below:
 ```
