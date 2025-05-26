@@ -123,7 +123,6 @@ remote_nfs_backupdir=/var/lib/libvirt/images/nfsbackups
 # yes|no flag to scp files to a remote host
 # This is typically used if you have two KVM hosts, and want each host to send nightly backup copies to the other
 # If set to yes, it is assumed that SSH key pairs are already configured
-# If set to yes, it is assumed that the remote host has the same $local_backupdir directory structure as the source host
 backup_to_remote_scp=yes
 remote_scp_backupdir=/var/lib/libvirt/images/backups
 
