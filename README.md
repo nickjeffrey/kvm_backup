@@ -1,5 +1,5 @@
 # kvm_backup
-Backup scripts for KVM virtual machines
+Backup script for KVM virtual machines
 
 # Overview
 
