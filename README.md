@@ -282,3 +282,4 @@ A: This script is very simple, just a bash script that runs from cron.  If you n
 - Xen Orchestra  (assumes you are using Xen or XCP-NG)
 - Veeam (commercial license)
 - Storware (commercial license)
+- Send your backups to a deduplicating filesystem (ie NetApp or DataDomain)
