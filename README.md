@@ -256,3 +256,20 @@ Backup details saved to logfile /tmp/centos10test.backup.log
 For restore instructions, please refer to centos10test.howtorestore.txt in the same folder as the backup.
 Sending backup report via email to janedoe@example.com at 2025-05-25 02:42:35
 ```
+
+### Q: I want to migrate my existing VMs to a new KVM host after a hardware refresh.  Can I use this script to backup from old KVM host and restore to new KVM host?
+
+A: Yes, you can backup from the old KVM host, then restore on the new KVM host.  However, if you are sensitive to downtime, perhaps a "live migration" would be more appropriate.  For example:
+```
+kvmhost1:~# virsh migrate --live --copy-storage-all --undefinesource --persistent --verbose myvm qemu+ssh://kvmhost2.example.com/system
+Migrating VM .... 17%
+Migrating VM .... 42%
+Migrating VM .... 79%
+Migration: [100.00 %]
+```
+
+Please note that live migration does have a few prerequisites:
+1) Source and target directory structures / storage pools must be identical
+2) Same networks must be on the source and target hosts
+3) SSH key pair auth already configured
+4) QEMU uses the nbd (Network Block Device) protocol over a high TCP port (default range: 49152–49215) for transferring disk images during storage migration (--copy-storage-all).  This means the firewall This means that the target KVM host will need to allow incoming traffic on those ports.  
