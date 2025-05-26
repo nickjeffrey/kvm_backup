@@ -195,5 +195,54 @@ A: Hot backup options exist, but are outside the scope of this script.
 
 A: These are all full cold backups, no incrementals or differentials, so you will need the same amount of space as all your VMs, multiplied by the number of backup generations you want to keep.  Note that if your source virtual disk files are thin-provisioned sparse files, the backups will be as well.  You might also consider sending the backups to a deduplicating filesystem (ie NetApp, DataDomain, etc) for storage efficiencies.
 
+### Q: How will I know if the backup succeeds.
 
-
+A: The backup job creates a verbose logfile, which which is (optionally) emailed to the sysadmin as a report of the backup status.  An example report is shown below:
+```
+Starting backup of virtual machine centos10test from /root/vm_backup.sh.nicktest script at 2025-05-25 02:42:05
+Environment variables sourced from config file /root/vm_backup.cfg:
+  sysadmin=janedoe@example.com
+  backup_to_local_dir=no
+  local_backupdir=/var/lib/libvirt/images/backups
+  backup_to_remote_nfs=yes
+  remote_nfs_backupdir=/var/lib/libvirt/images/nfsbackups
+  backup_to_remote_scp=yes
+  remote_host=kvmhost2.example.com
+  remote_scp_backupdir=/var/lib/libvirt/images/backups
+ 
+ 
+Creating readme file with restore instructions at /tmp/centos10test.howtorestore.txt
+Confirmed that VM centos10test exists
+Warning: VM centos10test is not currently in the running state. This script will not start the VM after the backup is complete.
+VM centos10test was already powered down, continuing with cold backup at 2025-05-25 02:42:05
+ 
+Starting backup to remote SSH/SCP host kvmhost2.example.com:/var/lib/libvirt/images/backups/centos10test/20250525/ at 2025-05-25 02:42:05
+Confirming target directory exists
+   ssh kvmhost2.example.com "test -d /var/lib/libvirt/images/backups/centos10test/20250525 || mkdir -p /var/lib/libvirt/images/backups/centos10test/20250525"
+Deleting any remote backups older than 30 days from kvmhost2.example.com:/var/lib/libvirt/images/backups
+   ssh kvmhost2.example.com "find /var/lib/libvirt/images/backups -type f -mtime +30 -print -exec rm {} \;"
+   ssh kvmhost2.example.com "find /var/lib/libvirt/images/backups -type d -empty -delete"
+Confirming target directory exists, just in case the previous step deleted it
+   ssh kvmhost2.example.com "test -d /var/lib/libvirt/images/backups/centos10test/20250525 || mkdir -p /var/lib/libvirt/images/backups/centos10test/20250525"
+Copying files to remote SSH/SCP backup target kvmhost2.example.com:/var/lib/libvirt/images/backups/centos10test/20250525/
+   /bin/virsh dumpxml centos10test > /tmp/centos10test.xmldump.tmp
+   scp /tmp/centos10test.xmldump.tmp   kvmhost2.example.com:/var/lib/libvirt/images/backups/centos10test/20250525/centos10test.xml
+   scp /tmp/centos10test.howtorestore.txt     kvmhost2.example.com:/var/lib/libvirt/images/backups/centos10test/20250525
+   scp /tmp/centos10test.backup.log        kvmhost2.example.com:/var/lib/libvirt/images/backups/centos10test/20250525
+Performing tar-over-ssh cold backup, copying virtual disk files to kvmhost2.example.com:/var/lib/libvirt/images/backups/centos10test/20250525/*.qcow2
+   tar -C "/var/lib/libvirt/images" -Scf - "centos10test.qcow2" | ssh kvmhost2.example.com tar -Sxf - -C "/var/lib/libvirt/images/backups/centos10test/20250525"
+   tar -C "/var/lib/libvirt/images" -Scf - "MyDemoDisk.qcow2" | ssh kvmhost2.example.com tar -Sxf - -C "/var/lib/libvirt/images/backups/centos10test/20250525"
+Finished copying backup to remote SSH/SCP host at 2025-05-25 02:42:27
+ 
+Found remote NFS backup target at mount point /var/lib/libvirt/images/nfsbackups
+Performing cold backup to remote NFS backup target /var/lib/libvirt/images/nfsbackups/centos10test/20250525/
+Copying virtual disk files to /var/lib/libvirt/images/nfsbackups/centos10test/20250525/*.qcow2
+   tar -C "/var/lib/libvirt/images" -Scf - "centos10test.qcow2" | tar -Sxf - -C "/var/lib/libvirt/images/nfsbackups/centos10test/20250525"
+   tar -C "/var/lib/libvirt/images" -Scf - "MyDemoDisk.qcow2" | tar -Sxf - -C "/var/lib/libvirt/images/nfsbackups/centos10test/20250525"
+Skipping restart of VM because VM was not already running prior to backup
+ 
+Backup complete at 2025-05-25 02:42:35
+Backup details saved to logfile /tmp/centos10test.backup.log
+For restore instructions, please refer to centos10test.howtorestore.txt in the same folder as the backup.
+Sending backup report via email to janedoe@example.com at 2025-05-25 02:42:35
+```
