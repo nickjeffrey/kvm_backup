@@ -23,6 +23,15 @@ This option is essentially the same process as the previous option, but the back
 
 This provides hardware redundancy, but since these are all "cold" backups, and local disk is usually faster than network, each VM will have a longer outage during hte cold backup.
 
+In this scenario, it is assumed that the backups are sent to a NAS or some other network storage providing an NFS export.  It is assumed that the KVM host already has the NFS filesystem mounted onto a local mount point.
+
+Each VM has its own cron entry, The backup process is:
+1) Shutdown VM   (these are all "cold" backups for consistency)
+2) Dump XML configuration to a file
+3) Copy QCOW2 virtual disk files to specified filesystem location
+4) Start VM
+
+
 # Scenario 3 - Backup to alternate KVM host
 
 This option is useful when you have multiple KVM hosts, and each host is a "warm standby" for the other.
@@ -30,6 +39,14 @@ This option is useful when you have multiple KVM hosts, and each host is a "warm
 For example, KVMHOST1 sends its backups to KVMHOST2, and vice versa.  
 
 In the event of either host failing, last night's backups are already on the alternate host, so can quickly be brought back online.  
+
+In this scenario, it is assumed that SSH key pair authentication is configured on each KVM host to allow automated SSH/SCP connections.
+
+Each VM has its own cron entry, The backup process is:
+1) Shutdown VM   (these are all "cold" backups for consistency)
+2) Dump XML configuration to a file
+3) Copy QCOW2 virtual disk files to remote KVM host using tar-over-ssh to preserve sparse files
+4) Start VM
 
 
 # Installation
@@ -103,3 +120,41 @@ hostname | grep -q kvmhost2 && remote_host=kvmhost1.example.com
 ```
 
 
+# How to restore
+
+Each backup job will create a readme file in the same folder as the backup, detailing the commands required to perform a restore.  For example:
+
+```
+# cat /var/lib/libvirt/images/backups/myvm.howtorestore.txt
+
+This readme file describes how to restore a backup created by the /root/vm_backup.sh.nicktest script.
+
+The following commands should be run on the standby host:
+
+1. Check to see if the virtual machine definition already exists:
+   /bin/virsh list --all
+   /bin/virsh dominfo $vm_name
+
+2. If the virtual machine definition already exists, please delete it:
+   /bin/virsh undefine centos10test
+
+3. It is highly preferred that the directory paths be identical on all KVM hosts.
+   If the directory paths are not identical on the source and targer machines,
+   you must manually edit the centos10test.xml file before the next step.
+
+4. Create the virtual machine definition:
+   /bin/virsh define --file /path/to/backup/centos10test/yyyymmdd/centos10test.xml
+
+5. If the *.qcow2 file is gzipped, uncompress the file:
+   cd /path/to/backup/centos10test/yyyymmdd
+   find . -type f -name "*.qcow2.gz" -exec gunzip {} \;
+
+6. Copy the *.qcow2 disk image file to the appropriate directory:
+   cp /path/to/backup/centos10test/yyyymmdd/*.qcow2 /to/appropriate/location/
+
+7. If desired, startup the virtual machine. NOTE: due to duplicate MAC addresses,
+   do not start up the standby VM if the primary VM is still running!
+   /bin/virsh start centos10test
+   /bin/virsh list --all
+   /bin/virsh dominfo $vm_name
+```
