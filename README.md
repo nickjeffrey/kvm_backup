@@ -118,7 +118,7 @@ backup_to_remote_nfs=yes
 
 # The remote_nfs_backupdir is only required if the backup_to_remote_nfs=yes
 # This is the local mount point on the KVM host
-remote_nfs_backupdir=/var/lib/libvirt/images/nfsbackups
+remote_nfs_backupdir=/kvmbackups
 
 # yes|no flag to scp files to a remote host
 # This is typically used if you have two KVM hosts, and want each host to send nightly backup copies to the other
