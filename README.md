@@ -89,7 +89,7 @@ Adjust the cron schedules as appropriate for your environment.
 
 Adjust the /root/kvm_cold_backup.cfg file as appropriate for your environment, following the examples in the file.
 ```
-# This is the configuration file for the vm_backup.sh script
+# This is the configuration file for the kvm_cold_backup.sh script
 # Edit the variables in this file to match your environment
 
 # yes|no flag to send an email report showing the backup status
