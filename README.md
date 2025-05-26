@@ -67,11 +67,13 @@ Adjust the cron schedules as appropriate for your environment.
 # crontab -l
 
 # nightly backups of KVM virtual machines
-1  3 * * * /root/vm_backup.sh MyVM001 >/dev/null 2>&1 
-31 3 * * * /root/vm_backup.sh MyVM002 >/dev/null 2>&1 
-1  4 * * * /root/vm_backup.sh MyVM003 >/dev/null 2>&1 
-31 4 * * * /root/vm_backup.sh MyVM004 >/dev/null 2>&1 
+1  3 * * * /root/vm_backup.sh myvm1 >/dev/null 2>&1 
+31 3 * * * /root/vm_backup.sh myvm2 >/dev/null 2>&1 
+1  4 * * * /root/vm_backup.sh myvm3 >/dev/null 2>&1 
+31 4 * * * /root/vm_backup.sh myvm4 >/dev/null 2>&1 
 
+1  5 * * 6 /root/vm_backup.sh myvm5 >/dev/null 2>&1  #only backup on Saturdays
+31 5 * * 0 /root/vm_backup.sh myvm6 >/dev/null 2>&1  #only backup on Sundays
 ```
 
 Adjust the /root/kvm_cold_backup.cfg file as appropriate for your environment, following the examples in the file.
