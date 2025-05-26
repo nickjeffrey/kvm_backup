@@ -167,7 +167,9 @@ A: Backups can be sent to a local filesystem, to an NFS-mounted filesystem on a 
 
 ### Q: Is there a recommended backup destination?
 
-You can choose any or all of the backup destinations, but it is highly recommended that you backup to a local disk directly on the KVM host, because these are "cold" backups taken while the VM is powered down.  Since you want to minimize the time the VM is down, copying to a local disk is typically faster than copying to a network-based location.
+You can choose any or all of the backup destinations, but it is highly recommended that you backup to a local disk directly on the KVM host, because these are "cold" backups taken while the VM is powered down.  
+
+Since you want to minimize the time the VM is down, copying to a local disk is typically faster than copying to a network-based location.
 
 HINT: If you backup to a local disk, the script will automatically start the VM after the local disk backup is completed, and will then continue with the (optional) copies to a remote NFS share or alternate KVM host.  The backup destinations are controlled by these entries in the config file:
 ```
@@ -179,4 +181,16 @@ backup_to_remote_scp=yes|no
 ### Q: Can I mix and match my backup destinations?  So VM1 gets backed to to local disk and NFS, but VM2 gets backed up to a remote KVM host?
 
 A: No, mixing and matching backup destinations on a per-VM basis is not supported.  But it could be with some effort, feel free to make a pull request.
+
+
+### Q: I cannot have any downtime for my virtual machines.  Is there a hot backup option?
+
+A: Hot backup options exist, but are outside the scope of this script.  
+
+
+### Q: How much disk space will I need for backups?
+
+A: These are all full cold backups, no incrementals or differentials, so you will need the same amount of space as all your VMs, multiplied by the number of backup generations you want to keep.  Note that if your source virtual disk files are thin-provisioned sparse files, the backups will be as well.  You might also consider sending the backups to a deduplicating filesystem (ie NetApp, DataDomain, etc) for storage efficiencies.
+
+
 
