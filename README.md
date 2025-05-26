@@ -279,7 +279,7 @@ Please note that live migration does have a few prerequisites:
 A: This script is very simple, just a bash script that runs from cron.  If you need something with more features, here are a few popular options:
 - https://github.com/abbbi/virtnbdbackup
 - Proxmox Backup Server (PBS)   (assumes you are using Proxmox)
-- Xen Orchestra  (assumes you are using Xen or XCP-NG)
+- Xen Orchestra  (assumes you are using XenServer or XCP-NG)
 - Veeam (commercial license)
 - Storware (commercial license)
 - Send your backups to a deduplicating filesystem (ie NetApp or DataDomain)
