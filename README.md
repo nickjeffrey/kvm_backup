@@ -11,7 +11,7 @@ Supported backup destinations include local disk path, remote NFS share, another
 
 This option is useful if you only have a single KVM host and no other available network storage, but provides little redundancy against hardware failure.
 
-Each VM has its own cron entry, The backup process is:
+Each VM has its own cron entry, with the high-level steps looking similar to:
 1) Shutdown VM   (these are all "cold" backups for consistency)
 2) Dump XML configuration to a file
 3) Copy QCOW2 virtual disk files to specified filesystem location
@@ -25,7 +25,7 @@ This provides hardware redundancy, but since these are all "cold" backups, and l
 
 In this scenario, it is assumed that the backups are sent to a NAS or some other network storage providing an NFS export.  It is assumed that the KVM host already has the NFS filesystem mounted onto a local mount point.
 
-Each VM has its own cron entry, The backup process is:
+Each VM has its own cron entry, with the high-level steps looking similar to:
 1) Shutdown VM   (these are all "cold" backups for consistency)
 2) Dump XML configuration to a file
 3) Copy QCOW2 virtual disk files to specified filesystem location
@@ -42,11 +42,17 @@ In the event of either host failing, last night's backups are already on the alt
 
 In this scenario, it is assumed that SSH key pair authentication is configured on each KVM host to allow automated SSH/SCP connections.
 
-Each VM has its own cron entry, The backup process is:
+Each VM has its own cron entry, with the high-level steps looking similar to:
 1) Shutdown VM   (these are all "cold" backups for consistency)
 2) Dump XML configuration to a file
 3) Copy QCOW2 virtual disk files to remote KVM host using tar-over-ssh to preserve sparse files
 4) Start VM
+
+
+# Scenario 4 - Combinations of the above  
+
+Depending on the availabilility of NAS storage or alternate KVM hosts in your environment, you can send backups to any or all of the above.
+
 
 
 # Installation
