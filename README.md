@@ -209,7 +209,7 @@ A: These are all full cold backups, no incrementals or differentials, so you wil
 
 A: The backup job creates a verbose logfile, which which is (optionally) emailed to the sysadmin as a report of the backup status.  An example report is shown below:
 ```
-Starting backup of virtual machine centos10test from /root/vm_backup.sh.nicktest script at 2025-05-25 02:42:05
+Starting backup of virtual machine centos10test from /root/kvm_cold_backup.sh script at 2025-05-25 02:42:05
 Environment variables sourced from config file /root/vm_backup.cfg:
   sysadmin=janedoe@example.com
   backup_to_local_dir=no
