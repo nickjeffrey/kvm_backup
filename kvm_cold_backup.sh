@@ -3,10 +3,10 @@
 
 # OUTSTANDING TASKS
 # -----------------
-# configure a relay host in postfix so this script can send email alerts
-# add a section at the end to send an email status report, include readme details on how to failover/failback
-# document how to perform the import of the VM on the remote host (or just do the import over SSH)
+# document how to configure a relay host in postfix so this script can send email alerts
 # figure out how to stop the automatic overwrite on the remote host in the event of a problem on the primary host (ie in a failover situation)
+# add error check to confirm NAS responds to ping
+# add error check to confirm alternate KVM host responds to ping
 
 
 # CHANGE LOG
@@ -14,6 +14,7 @@
 # 2023-08-26	njeffrey	Script created
 # 2025-02-01	njeffrey	Bug fixes, add support for backing up multiple VMs
 # 2025-05-25	njeffrey	Add support for backup to remote NFS
+# 2025-05-26	njeffrey	Confirm target directory exists before copying files
 
 
 # NOTES
@@ -25,8 +26,8 @@
 #  - copy VM backup files to remote location
 #
 # It is assumed that the script runs from the root crontab on each KVM host.  For example:
-# 1  3 * * 1 /root/vm_backup.sh vm1 1>/dev/null 2>&1  #backup KVM virtual machines
-# 31 3 * * 1 /root/vm_backup.sh vm2 1>/dev/null 2>&1  #backup KVM virtual machines
+# 1  3 * * 1 /root/kvm_cold_backup.sh vm1 1>/dev/null 2>&1  #backup KVM virtual machine
+# 31 3 * * 1 /root/kvm_cold_backup.sh vm2 1>/dev/null 2>&1  #backup KVM virtual machine
 
 
 # confirm script is running as root
@@ -36,7 +37,7 @@
 # Declare variables
 sysadmin=nick@jeffrey.com
 local_backupdir=/var/lib/libvirt/images/backups
-remote_nfs_backupdir=/var/lib/libvirt/images/nfsbackups
+remote_nfs_backupdir=/kvmbackups
 backup_to_remote_nfs=yes		#yes|no flag to  cp files to NFS mount,   assumes NFS mount is already mounted
 backup_to_remote_scp=yes		#yes|no flag to scp files to remote host, assumes ssh key pair auth and remote host has same $local_backupdir folder 
 
@@ -320,6 +321,8 @@ if [[ "$backup_to_local_dir" == "yes" ]]; then
    #
    # confirm target directory exists
    echo ' ' | $tee $logfile
+   echo ' ' | $tee $logfile
+   echo ' ' | $tee $logfile
    echo Performing backup to local directory $local_backupdir/$vm_name/$yyyymmdd/ | $tee $logfile
    echo Confirming target folder exists | $tee $logfile
    cmd="   test -d $local_backupdir/$vm_name/$yyyymmdd || mkdir -p $local_backupdir/$vm_name/$yyyymmdd"
@@ -354,6 +357,13 @@ if [[ "$backup_to_local_dir" == "yes" ]]; then
    cmd="   find $local_backupdir/$vm_name -type d -empty -print -delete"
    echo "$cmd"  | $tee $logfile
    eval "$cmd" 
+   #
+   # confirm target directory exists, just in case we deleted it in the previous step
+   echo Confirming target folder exists | $tee $logfile
+   cmd="   test -d $local_backupdir/$vm_name/$yyyymmdd || mkdir -p $local_backupdir/$vm_name/$yyyymmdd"
+   echo "$cmd"  | $tee $logfile
+   eval "$cmd" 
+   #
    #
    # save the VM disk images to a backup location on the local machine
    #
@@ -436,6 +446,8 @@ if [[ "$backup_to_remote_scp" == "no"  ]]; then
    echo "Remote SCP backup target not defined in config file, skipping copy to remote SCP server" | $tee $logfile
 fi
 if [[ "$backup_to_remote_scp" == "yes" ]]; then
+   echo ' ' | $tee $logfile
+   echo ' ' | $tee $logfile
    echo ' ' | $tee $logfile
    date_stamp=`date "+%Y-%m-%d %H:%M:%S"`
    echo Starting backup to remote SSH/SCP host $remote_host:$local_backupdir/$vm_name/$yyyymmdd/ at $date_stamp | $tee $logfile
@@ -548,6 +560,8 @@ if [[ "$backup_to_remote_nfs" == "no"  ]]; then
 fi
 if [[ "$backup_to_remote_nfs" == "yes" ]]; then
    echo ' ' | $tee $logfile
+   echo ' ' | $tee $logfile
+   echo ' ' | $tee $logfile
    date_stamp=`date "+%Y-%m-%d %H:%M:%S"`
    echo Found remote NFS backup target at mount point $remote_nfs_backupdir | $tee $logfile
    #
@@ -580,6 +594,13 @@ if [[ "$backup_to_remote_nfs" == "yes" ]]; then
          find $remote_nfs_backupdir/$vm_name -type d -empty -print -delete
       fi
    fi
+   #
+   # confirm target directory exists, just in case we deleted it in the previous step
+   echo Confirming target folder exists | $tee $logfile
+   cmd="   test -d $remote_nfs_backupdir/$vm_name/$yyyymmdd || mkdir -p $remote_nfs_backupdir/$vm_name/$yyyymmdd"
+   echo "$cmd"  | $tee $logfile
+   eval "$cmd" 
+   #
    #
    # If we have a local backup copy already, copy files from local backup directory to remote NFS target
    # This section runs if backup_to_local_dir=yes
