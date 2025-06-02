@@ -15,6 +15,7 @@
 # 2025-02-01	njeffrey	Bug fixes, add support for backing up multiple VMs
 # 2025-05-25	njeffrey	Add support for backup to remote NFS
 # 2025-05-26	njeffrey	Confirm target directory exists before copying files
+# 2025-06-02	njeffrey	Add hostname to email subject line
 
 
 # NOTES
@@ -35,13 +36,13 @@
 
 
 # Declare variables
-sysadmin=nick@jeffrey.com
-local_backupdir=/var/lib/libvirt/images/backups
-remote_nfs_backupdir=/kvmbackups
-backup_to_remote_nfs=yes		#yes|no flag to  cp files to NFS mount,   assumes NFS mount is already mounted
-backup_to_remote_scp=yes		#yes|no flag to scp files to remote host, assumes ssh key pair auth and remote host has same $local_backupdir folder 
+#sysadmin=nick@jeffrey.com
+#local_backupdir=/var/lib/libvirt/images/backups
+#remote_nfs_backupdir=/kvmbackups
+#backup_to_remote_nfs=yes		#yes|no flag to  cp files to NFS mount,   assumes NFS mount is already mounted
+#backup_to_remote_scp=yes		#yes|no flag to scp files to remote host, assumes ssh key pair auth and remote host has same $local_backupdir folder 
 
-
+host_name=`hostname -s`
 tee="/bin/tee --append"
 
 # Confirm required files exist
@@ -64,7 +65,7 @@ config_file="$SCRIPT_DIR/kvm_cold_backup.cfg"
 if [[ ! -f "$config_file" ]]; then
    echo "ERROR: cannot find configuration file, please confirm the .cfg file is in the same directory as this script" 
    echo "ERROR: cannot find configuration file, please confirm the .cfg file is in the same directory as this script" | logger
-   echo "ERROR: cannot find configuration file, please confirm the .cfg file is in the same directory as this script" | mail -s "$0 backup job error" $sysadmin
+   echo "ERROR: cannot find configuration file, please confirm the .cfg file is in the same directory as this script" | mail -s "$host_name:$0 backup job error" $sysadmin
    exit 1
 fi
 source "$config_file"
@@ -87,45 +88,45 @@ echo "  remote_scp_backupdir=$remote_scp_backupdir"
 if [[ "$send_email_report" == "yes" ]] && [[ "$sysadmin" == "helpdesk@example.com" ]] && [[ "$backup_to_remote_scp" == "no" ]]; then
    echo "ERROR: please change the sysadmin=$sysadmin line in the config file $config_file to a valid email address" 
    echo "ERROR: please change the sysadmin=$sysadmin line in the config file $config_file to a valid email address" | logger
-   echo "ERROR: please change the sysadmin=$sysadmin line in the config file $config_file to a valid email address" | mail -s "$0 backup job error" $sysadmin
+   echo "ERROR: please change the sysadmin=$sysadmin line in the config file $config_file to a valid email address" | mail -s "$host_name:$0 backup job error" $sysadmin
    exit 1
 fi
 if [[ "$send_email_report" == "yes" ]] && [[ "$sysadmin" == "" ]] && [[ "$backup_to_remote_scp" == "no" ]]; then
    echo "ERROR: no destination email address found, please set the sysadmin= line in the config file $config_file" 
    echo "ERROR: no destination email address found, please set the sysadmin= line in the config file $config_file" | logger
-   echo "ERROR: no destination email address found, please set the sysadmin= line in the config file $config_file" mail -s "$0 backup job error" $sysadmin
+   echo "ERROR: no destination email address found, please set the sysadmin= line in the config file $config_file" mail -s "$host_name:$0 backup job error" $sysadmin
    exit 1
 fi
 if [[ "$backup_to_local_dir" == "no" ]] && [[ "$backup_to_remote_nfs" == "no" ]] && [[ "$backup_to_remote_scp" == "no" ]]; then
    echo "ERROR: no backup targets found.  You must enable local or NFS or SCP, please check the config file" 
    echo "ERROR: no backup targets found.  You must enable local or NFS or SCP, please check the config file" | logger
-   echo "ERROR: no backup targets found.  You must enable local or NFS or SCP, please check the config file" | mail -s "$0 backup job error" $sysadmin
+   echo "ERROR: no backup targets found.  You must enable local or NFS or SCP, please check the config file" | mail -s "$host_name:$0 backup job error" $sysadmin
    exit 1
 fi
 #
 if [[ "$backup_to_local_dir" == "yes" ]] && [[ "$local_backupdir" == "" ]]; then
    echo "ERROR: local_backupdir variable is not defined in config file $config_file" 
    echo "ERROR: local_backupdir variable is not defined in config file $config_file" | logger
-   echo "ERROR: local_backupdir variable is not defined in config file $config_file" | mail -s "$0 backup job error" $sysadmin
+   echo "ERROR: local_backupdir variable is not defined in config file $config_file" | mail -s "$host_name:$0 backup job error" $sysadmin
    exit 1
 fi
 if [[ "$backup_to_local_dir" == "yes" ]] && [[ ! -d "$local_backupdir" ]]; then
    echo "ERROR: local backup directory $local_backupdir does not exist, please create this directory." 
    echo "ERROR: local backup directory $local_backupdir does not exist, please create this directory." | logger
-   echo "ERROR: local backup directory $local_backupdir does not exist, please create this directory." | mail -s "$0 backup job error" $sysadmin
+   echo "ERROR: local backup directory $local_backupdir does not exist, please create this directory." | mail -s "$host_name:$0 backup job error" $sysadmin
    exit 1
 fi
 #
 if [[ "$backup_to_remote_nfs" == "yes" ]] && [[ "$remote_nfs_backupdir" == "" ]]; then
    echo "ERROR: remote_nfs_backupdir variable is not defined in config file $config_file" 
    echo "ERROR: remote_nfs_backupdir variable is not defined in config file $config_file" | logger
-   echo "ERROR: remote_nfs_backupdir variable is not defined in config file $config_file" | mail -s "$0 backup job error" $sysadmin
+   echo "ERROR: remote_nfs_backupdir variable is not defined in config file $config_file" | mail -s "$host_name:$0 backup job error" $sysadmin
    exit 1
 fi
 if [[ "$backup_to_remote_nfs" == "yes" ]] && [[ ! -d "$remote_nfs_backupdir" ]]; then
    echo "ERROR: remote NFS share not mounted on $remote_nfs_backupdir , please mount this remote NFS share." 
    echo "ERROR: remote NFS share not mounted on $remote_nfs_backupdir , please mount this remote NFS share." | logger
-   echo "ERROR: remote NFS share not mounted on $remote_nfs_backupdir , please mount this remote NFS share." | mail -s "$0 backup job error" $sysadmin
+   echo "ERROR: remote NFS share not mounted on $remote_nfs_backupdir , please mount this remote NFS share." | mail -s "$host_name:$0 backup job error" $sysadmin
    exit 1
 fi
 
@@ -147,7 +148,7 @@ date_stamp=`date "+%Y-%m-%d %H:%M:%S"`
 vm_name=unknown
 if [[ -z "$1" ]]; then
    echo ERROR: Please provide name of VM to be backed up.  For example: $0 vm_name  | logger
-   echo ERROR: Please provide name of VM to be backed up.  For example: $0 vm_name  | mail -s "$0 backup job error" $sysadmin
+   echo ERROR: Please provide name of VM to be backed up.  For example: $0 vm_name  | mail -s "$host_name:$0 backup job error" $sysadmin
    exit 1
 else
    vm_name=$1
@@ -161,14 +162,14 @@ logfile=/tmp/$vm_name.backup.log
 test -f $logfile && rm -f $logfile 
 if [[ -f "$logfile" ]]; then
    echo ERROR: could not delete old version of logfile $logfile , Please check permissions. | logger
-   echo ERROR: could not delete old version of logfile $logfile , Please check permissions. | mail -s "$0 backup job error for $vm_name" $sysadmin
+   echo ERROR: could not delete old version of logfile $logfile , Please check permissions. | mail -s "$host_name:$0 backup job error for $vm_name" $sysadmin
    exit 1
 fi
 touch $logfile
 if [[ ! -f "$logfile" ]]; then
    echo ERROR: could not create logfile $logfile , Please check permissions. 
    echo ERROR: could not create logfile $logfile , Please check permissions. | logger
-   echo ERROR: could not create logfile $logfile , Please check permissions. | mail -s "$0 backup job error for $vm_name" $sysadmin
+   echo ERROR: could not create logfile $logfile , Please check permissions. | mail -s "$host_name:$0 backup job error for $vm_name" $sysadmin
    exit 1
 fi
 echo Starting backup of virtual machine $vm_name from $0 script at $date_stamp | $tee $logfile
@@ -191,37 +192,37 @@ readme_txt=/tmp/$vm_name.howtorestore.txt
 test -f $readme_txt && rm -f $readme_txt
 echo ' ' | $tee $logfile
 echo Creating readme file with restore instructions at $readme_txt | $tee $logfile
-echo This readme file describes how to restore a backup created by the $0 script.            > $readme_txt
-echo ' '                                                                                    >> $readme_txt
-echo 'The following commands should be run on the standby host: '                           >> $readme_txt
-echo ' '                                                                                    >> $readme_txt
-echo '1. Check to see if the virtual machine definition already exists: '                   >> $readme_txt
-echo '   /bin/virsh list --all'                                                             >> $readme_txt  
-echo '   /bin/virsh dominfo $vm_name'                                                       >> $readme_txt  
-echo ' '                                                                                    >> $readme_txt
-echo '2. If the virtual machine definition already exists, please delete it: '              >> $readme_txt
-echo "   /bin/virsh undefine $vm_name"                                                      >> $readme_txt
-echo ' '                                                                                    >> $readme_txt
-echo "3. It is highly preferred that the directory paths be identical on all KVM hosts."    >> $readme_txt
-echo "   If the directory paths are not identical on the source and targer machines,"       >> $readme_txt
-echo "   you must manually edit the $vm_name.xml file before the next step."                >> $readme_txt
-echo ' '                                                                                    >> $readme_txt
-echo '4. Create the virtual machine definition: '                                           >> $readme_txt
-echo "   /bin/virsh define --file /path/to/backup/$vm_name/yyyymmdd/$vm_name.xml"           >> $readme_txt
-echo ' '                                                                                    >> $readme_txt
-echo '5. If the *.qcow2 file is gzipped, uncompress the file: '                             >> $readme_txt
-echo "   cd /path/to/backup/$vm_name/yyyymmdd "                                             >> $readme_txt
-echo '   find . -type f -name "*.qcow2.gz" -exec gunzip {} \; '                             >> $readme_txt
-echo ' '                                                                                    >> $readme_txt
-echo '6. Copy the *.qcow2 disk image file to the appropriate directory: '                   >> $readme_txt
-echo "   cp /path/to/backup/$vm_name/yyyymmdd/*.qcow2 /to/appropriate/location/ "           >> $readme_txt
-echo ' '                                                                                    >> $readme_txt
-echo '7. If desired, startup the virtual machine. NOTE: due to duplicate MAC addresses,'    >> $readme_txt
-echo '   do not start up the standby VM if the primary VM is still running!'                >> $readme_txt
-echo "   /bin/virsh start $vm_name "                                                        >> $readme_txt
-echo '   /bin/virsh list --all '                                                            >> $readme_txt
-echo '   /bin/virsh dominfo $vm_name'                                                       >> $readme_txt  
-echo ' '                                                                                    >> $readme_txt
+echo This readme file describes how to restore a backup created by the $0 script on $host_name > $readme_txt
+echo ' '                                                                                      >> $readme_txt
+echo 'The following commands should be run on the standby host: '                             >> $readme_txt
+echo ' '                                                                                      >> $readme_txt
+echo '1. Check to see if the virtual machine definition already exists: '                     >> $readme_txt
+echo '   /bin/virsh list --all'                                                               >> $readme_txt  
+echo '   /bin/virsh dominfo $vm_name'                                                         >> $readme_txt  
+echo ' '                                                                                      >> $readme_txt
+echo '2. If the virtual machine definition already exists, please delete it: '                >> $readme_txt
+echo "   /bin/virsh undefine $vm_name"                                                        >> $readme_txt
+echo ' '                                                                                      >> $readme_txt
+echo "3. It is highly preferred that the directory paths be identical on all KVM hosts."      >> $readme_txt
+echo "   If the directory paths are not identical on the source and targer machines,"         >> $readme_txt
+echo "   you must manually edit the $vm_name.xml file before the next step."                  >> $readme_txt
+echo ' '                                                                                      >> $readme_txt
+echo '4. Create the virtual machine definition: '                                             >> $readme_txt
+echo "   /bin/virsh define --file /path/to/backup/$vm_name/yyyymmdd/$vm_name.xml"             >> $readme_txt
+echo ' '                                                                                      >> $readme_txt
+echo '5. If the *.qcow2 file is gzipped, uncompress the file: '                               >> $readme_txt
+echo "   cd /path/to/backup/$vm_name/yyyymmdd "                                               >> $readme_txt
+echo '   find . -type f -name "*.qcow2.gz" -exec gunzip {} \; '                               >> $readme_txt
+echo ' '                                                                                      >> $readme_txt
+echo '6. Copy the *.qcow2 disk image file to the appropriate directory: '                     >> $readme_txt
+echo "   cp /path/to/backup/$vm_name/yyyymmdd/*.qcow2 /to/appropriate/location/ "             >> $readme_txt
+echo ' '                                                                                      >> $readme_txt
+echo '7. If desired, startup the virtual machine. NOTE: due to duplicate MAC addresses,'      >> $readme_txt
+echo '   do not start up the standby VM if the primary VM is still running!'                  >> $readme_txt
+echo "   /bin/virsh start $vm_name "                                                          >> $readme_txt
+echo '   /bin/virsh list --all '                                                              >> $readme_txt
+echo '   /bin/virsh dominfo $vm_name'                                                         >> $readme_txt  
+echo ' '                                                                                      >> $readme_txt
 
 
 
@@ -239,12 +240,12 @@ if [[ "$vm_exists" == "yes" ]]; then
 fi
 if [[ "$vm_exists" == "no" ]]; then
    echo "ERROR: cannot find VM $vm_name , please confirm this is a valid name with: virsh list --all" | $tee $logfile
-   echo "ERROR: cannot find VM $vm_name , please confirm this is a valid name with: virsh list --all" | mail -s "$0 backup job error for $vm_name" $sysadmin
+   echo "ERROR: cannot find VM $vm_name , please confirm this is a valid name with: virsh list --all" | mail -s "$host_name:$0 backup job error for $vm_name" $sysadmin
    exit
 fi
 if [[ "$vm_exists" == "unknown" ]]; then
    echo "ERROR: cannot determine the names of running VMs , please check with: virsh list --all" | $tee $logfile
-   echo "ERROR: cannot determine the names of running VMs , please check with: virsh list --all" | mail -s "$0 backup job error" $sysadmin
+   echo "ERROR: cannot determine the names of running VMs , please check with: virsh list --all" | mail -s "$host_name:$0 backup job error" $sysadmin
    exit
 fi
 #
@@ -295,12 +296,12 @@ vm_state=unknown
 if [[ "$vm_state" == "running" ]]; then
    date_stamp=`date "+%Y-%m-%d %H:%M:%S"`
    echo ERROR: Cannot perform graceful shutdown of VM $vm_name , cancelling backup at $date_stamp | $tee $logfile
-   echo ERROR: Cannot perform graceful shutdown of VM $vm_name , cancelling backup at $date_stamp | mail -s "$0 backup job error for $vm_name" $sysadmin
+   echo ERROR: Cannot perform graceful shutdown of VM $vm_name , cancelling backup at $date_stamp | mail -s "$host_name:$0 backup job error for $vm_name" $sysadmin
    exit 1
 fi
 if [[ "$vm_state" == "unknown" ]]; then
    echo ERROR: Cannot determine state of VM $vm_name , please investigate | $tee $logfile
-   echo ERROR: Cannot determine state of VM $vm_name , please investigate | mail -s "$0 backup job error for $vm_name" $sysadmin
+   echo ERROR: Cannot determine state of VM $vm_name , please investigate | mail -s "$host_name:$0 backup job error for $vm_name" $sysadmin
    exit 1
 fi
 if [[ "$vm_state" == "shutoff" ]]; then
@@ -332,7 +333,7 @@ if [[ "$backup_to_local_dir" == "yes" ]]; then
    if [[ ! -d "$local_backupdir/$vm_name/$yyyymmdd" ]]; then
       echo ERROR: could not create local backup directory $local_backupdir/$vm_name/$yyyymmdd 
       echo ERROR: could not create local backup directory $local_backupdir/$vm_name/$yyyymmdd | logger
-      echo ERROR: could not create local backup directory $local_backupdir/$vm_name/$yyyymmdd | mail -s "$0 backup job error for $vm_name" $sysadmin
+      echo ERROR: could not create local backup directory $local_backupdir/$vm_name/$yyyymmdd | mail -s "$host_name:$0 backup job error for $vm_name" $sysadmin
       exit 1
    fi
    #
@@ -342,7 +343,7 @@ if [[ "$backup_to_local_dir" == "yes" ]]; then
    if [[ ! -f "$local_backupdir/$vm_name/$yyyymmdd/testfile.tmp" ]]; then
       echo ERROR: could not create file $local_backupdir/$vm_name/$yyyymmdd/testfile.tmp , Please check permissions. 
       echo ERROR: could not create file $local_backupdir/$vm_name/$yyyymmdd/testfile.tmp , Please check permissions. | logger
-      echo ERROR: could not create file $local_backupdir/$vm_name/$yyyymmdd/testfile.tmp , Please check permissions. | mail -s "$0 backup job error for $vm_name" $sysadmin
+      echo ERROR: could not create file $local_backupdir/$vm_name/$yyyymmdd/testfile.tmp , Please check permissions. | mail -s "$host_name:$0 backup job error for $vm_name" $sysadmin
       exit 1
    fi
    test -f "$local_backupdir/$vm_name/$yyyymmdd/testfile.tmp" && rm -f "$local_backupdir/$vm_name/$yyyymmdd/testfile.tmp"
@@ -407,12 +408,12 @@ if [[ "$backup_to_local_dir" == "yes" ]]; then
    vm_backup_status=unknown
    if [[ ! -f $local_backupdir/$vm_name/$yyyymmdd/$vm_name.xml ]]; then
       echo ERROR: could not create XML file $local_backupdir/$vm_name/$yyyymmdd/$vm_name.xml | $tee $logfile
-      echo ERROR: could not create XML file $local_backupdir/$vm_name/$yyyymmdd/$vm_name.xml | mail -s "$0 backup job error" $sysadmin
+      echo ERROR: could not create XML file $local_backupdir/$vm_name/$yyyymmdd/$vm_name.xml | mail -s "$host_name:$0 backup job error" $sysadmin
       vm_backup_status=fail
    fi
    if [[ ! -f $local_backupdir/$vm_name/$yyyymmdd/$vm_name.qcow2 ]]; then
       echo ERROR: could not create QCOW2 file $local_backupdir/$vm_name/$yyyymmdd/$vm_name.qcow2 | $tee $logfile
-      echo ERROR: could not create QCOW2 file $local_backupdir/$vm_name/$yyyymmdd/$vm_name.qcow2 | mail -s "$0 backup job error" $sysadmin
+      echo ERROR: could not create QCOW2 file $local_backupdir/$vm_name/$yyyymmdd/$vm_name.qcow2 | mail -s "$host_name:$0 backup job error" $sysadmin
       vm_backup_status=fail
    fi
    test -f $local_backupdir/$vm_name/$yyyymmdd/$vm_name.xml && test -f $local_backupdir/$vm_name/$yyyymmdd/$vm_name.qcow2 && vm_backup_status=ok
@@ -569,7 +570,7 @@ if [[ "$backup_to_remote_nfs" == "yes" ]]; then
    #
    if [[ ! -d "$remote_nfs_backupdir" ]]; then
       echo "ERROR: remote NFS share is not mounted on $remote_nfs_backupdir , please ensure remote directory is exported and mounted on this KVM server" | $tee $logfile
-      echo "ERROR: remote NFS share is not mounted on $remote_nfs_backupdir , please ensure remote directory is exported and mounted on this KVM server" | mail -s "`hostname` $0 backup job error" $sysadmin
+      echo "ERROR: remote NFS share is not mounted on $remote_nfs_backupdir , please ensure remote directory is exported and mounted on this KVM server" | mail -s "$host_name:$0 backup job error" $sysadmin
    fi
    #
    # confirm we can create a subdirectory on the remote NFS host
@@ -581,7 +582,7 @@ if [[ "$backup_to_remote_nfs" == "yes" ]]; then
       fi
       if [[ ! -d "$remote_nfs_backupdir/$vm_name/$yyyymmdd" ]]; then
          echo "ERROR: could not create remote NFS directory $remote_nfs_backupdir/$vm_name/$yyyymmdd , please check permissions" | $tee $logfile
-         echo "ERROR: could not create remote NFS directory $remote_nfs_backupdir/$vm_name/$yyyymmdd , please check permissions" | mail -s "`hostname` $0 backup job error" $sysadmin
+         echo "ERROR: could not create remote NFS directory $remote_nfs_backupdir/$vm_name/$yyyymmdd , please check permissions" | mail -s "`hostname` $host_name:$0 backup job error" $sysadmin
       fi
       #
       # delete any remote NFS backup copies more than 30 days old
@@ -718,7 +719,7 @@ fi
 if [[ "$vm_state" == "shutoff" ]] && [[ "$vm_restart" == "yes" ]]; then
    echo "ERROR: VM $vm_name failed to start after cold backup, please investigate" 
    echo "ERROR: VM $vm_name failed to start after cold backup, please investigate" | $tee $logfile
-   echo "ERROR: VM $vm_name failed to start after cold backup, please investigate" | mail -s "$0 backup job error" $sysadmin
+   echo "ERROR: VM $vm_name failed to start after cold backup, please investigate" | mail -s "$host_name:$0 backup job error" $sysadmin
 fi
 
 # Send email report to sysadmin
