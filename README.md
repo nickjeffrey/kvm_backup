@@ -176,7 +176,7 @@ The following commands should be run on the standby host:
 
 ### Q: What backup destinations are supported?
 
-A: Backups can be sent to a local filesystem, to an NFS-mounted filesystem on a NAS, or to an alternate "warm standby" KVM host.  
+A: Backups can be sent to a local filesystem, to an NFS-mounted filesystem on a NAS, to an alternate "warm standby" KVM host, or any combination of these.
 
 ### Q: Is there a recommended backup destination?
 
