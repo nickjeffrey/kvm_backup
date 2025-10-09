@@ -69,7 +69,7 @@ git clone https://github.com/nickjeffrey/kvm_backup
 cd kvm_backup
 cp kvm_cold_backup.cfg  /root/kvm_cold_backup.cfg
 cp kvm_cold_backup.sh   /root/kvm_cold_backup.sh
-chmod 755 /root/kvm_cold_backup.ksh
+chmod 755 /root/kvm_cold_backup.sh
 ```
 
 On the KVM host, create cron jobs for each VM you want to backup.  Try to stagger the backups to avoid resource contention.
