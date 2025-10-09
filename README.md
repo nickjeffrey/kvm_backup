@@ -66,7 +66,7 @@ Download the files to each KVM host
 ```
 cd /tmp
 git clone https://github.com/nickjeffrey/kvm_backup
-cd kvmbackup
+cd kvm_backup
 cp kvm_cold_backup.cfg  /root/kvm_cold_backup.cfg
 cp kvm_cold_backup.shg  /root/kvm_cold_backup.sh
 chmod 755 /root/kvm_cold_backup.ksh
