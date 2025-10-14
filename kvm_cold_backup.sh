@@ -16,6 +16,7 @@
 # 2025-05-25	njeffrey	Add support for backup to remote NFS
 # 2025-05-26	njeffrey	Confirm target directory exists before copying files
 # 2025-06-02	njeffrey	Add hostname to email subject line
+# 2025-10-14	njeffrey	Confirm script is running as root
 
 
 # NOTES
@@ -32,16 +33,13 @@
 
 
 # confirm script is running as root
-# to be written
+if [ "$EUID" -ne 0 ]; then
+  echo "ERROR: this script must be run as root"
+  exit 1
+fi
 
 
 # Declare variables
-#sysadmin=nick@jeffrey.com
-#local_backupdir=/var/lib/libvirt/images/backups
-#remote_nfs_backupdir=/kvmbackups
-#backup_to_remote_nfs=yes		#yes|no flag to  cp files to NFS mount,   assumes NFS mount is already mounted
-#backup_to_remote_scp=yes		#yes|no flag to scp files to remote host, assumes ssh key pair auth and remote host has same $local_backupdir folder 
-
 host_name=`hostname -s`
 tee="/bin/tee --append"
 
@@ -76,22 +74,24 @@ echo "Environment variables sourced from config file $config_file:"
 echo "  send_email_report==$send_email_report"
 echo "  sysadmin=$sysadmin"
 echo "  backup_to_local_dir=$backup_to_local_dir"
+echo "  local_vmdir=$local_vmdir"
 echo "  local_backupdir=$local_backupdir"
 echo "  backup_to_remote_nfs=$backup_to_remote_nfs"
 echo "  remote_nfs_backupdir=$remote_nfs_backupdir"
 echo "  backup_to_remote_scp=$backup_to_remote_scp"
 echo "  remote_host=$remote_host"
 echo "  remote_scp_backupdir=$remote_scp_backupdir"
+echo "  maxage_days=$maxage_days"
 
 
 # sanity checks to ensure there are sane values in the config file
-if [[ "$send_email_report" == "yes" ]] && [[ "$sysadmin" == "helpdesk@example.com" ]] && [[ "$backup_to_remote_scp" == "no" ]]; then
+if [[ "$send_email_report" == "yes" ]] && [[ "$sysadmin" == "helpdesk@example.com" ]]; then
    echo "ERROR: please change the sysadmin=$sysadmin line in the config file $config_file to a valid email address" 
    echo "ERROR: please change the sysadmin=$sysadmin line in the config file $config_file to a valid email address" | logger
    echo "ERROR: please change the sysadmin=$sysadmin line in the config file $config_file to a valid email address" | mail -s "$host_name:$0 backup job error" $sysadmin
    exit 1
 fi
-if [[ "$send_email_report" == "yes" ]] && [[ "$sysadmin" == "" ]] && [[ "$backup_to_remote_scp" == "no" ]]; then
+if [[ "$send_email_report" == "yes" ]] && [[ "$sysadmin" == "" ]]; then
    echo "ERROR: no destination email address found, please set the sysadmin= line in the config file $config_file" 
    echo "ERROR: no destination email address found, please set the sysadmin= line in the config file $config_file" | logger
    echo "ERROR: no destination email address found, please set the sysadmin= line in the config file $config_file" mail -s "$host_name:$0 backup job error" $sysadmin
@@ -192,37 +192,38 @@ readme_txt=/tmp/$vm_name.howtorestore.txt
 test -f $readme_txt && rm -f $readme_txt
 echo ' ' | $tee $logfile
 echo Creating readme file with restore instructions at $readme_txt | $tee $logfile
-echo This readme file describes how to restore a backup created by the $0 script on $host_name > $readme_txt
-echo ' '                                                                                      >> $readme_txt
-echo 'The following commands should be run on the standby host: '                             >> $readme_txt
-echo ' '                                                                                      >> $readme_txt
-echo '1. Check to see if the virtual machine definition already exists: '                     >> $readme_txt
-echo '   /bin/virsh list --all'                                                               >> $readme_txt  
-echo '   /bin/virsh dominfo $vm_name'                                                         >> $readme_txt  
-echo ' '                                                                                      >> $readme_txt
-echo '2. If the virtual machine definition already exists, please delete it: '                >> $readme_txt
-echo "   /bin/virsh undefine $vm_name"                                                        >> $readme_txt
-echo ' '                                                                                      >> $readme_txt
-echo "3. It is highly preferred that the directory paths be identical on all KVM hosts."      >> $readme_txt
-echo "   If the directory paths are not identical on the source and targer machines,"         >> $readme_txt
-echo "   you must manually edit the $vm_name.xml file before the next step."                  >> $readme_txt
-echo ' '                                                                                      >> $readme_txt
-echo '4. Create the virtual machine definition: '                                             >> $readme_txt
-echo "   /bin/virsh define --file /path/to/backup/$vm_name/yyyymmdd/$vm_name.xml"             >> $readme_txt
-echo ' '                                                                                      >> $readme_txt
-echo '5. If the *.qcow2 file is gzipped, uncompress the file: '                               >> $readme_txt
-echo "   cd /path/to/backup/$vm_name/yyyymmdd "                                               >> $readme_txt
-echo '   find . -type f -name "*.qcow2.gz" -exec gunzip {} \; '                               >> $readme_txt
-echo ' '                                                                                      >> $readme_txt
-echo '6. Copy the *.qcow2 disk image file to the appropriate directory: '                     >> $readme_txt
-echo "   cp /path/to/backup/$vm_name/yyyymmdd/*.qcow2 /to/appropriate/location/ "             >> $readme_txt
-echo ' '                                                                                      >> $readme_txt
-echo '7. If desired, startup the virtual machine. NOTE: due to duplicate MAC addresses,'      >> $readme_txt
-echo '   do not start up the standby VM if the primary VM is still running!'                  >> $readme_txt
-echo "   /bin/virsh start $vm_name "                                                          >> $readme_txt
-echo '   /bin/virsh list --all '                                                              >> $readme_txt
-echo '   /bin/virsh dominfo $vm_name'                                                         >> $readme_txt  
-echo ' '                                                                                      >> $readme_txt
+echo This readme file describes how to restore a backup created by the $0 script on $host_name   > $readme_txt
+echo ' '                                                                                        >> $readme_txt
+echo 'The following commands should be run on the standby host: '                               >> $readme_txt
+echo ' '                                                                                        >> $readme_txt
+echo '1. Check to see if the virtual machine definition already exists: '                       >> $readme_txt
+echo '   /bin/virsh list --all'                                                                 >> $readme_txt  
+echo "   /bin/virsh dominfo $vm_name"                                                           >> $readme_txt  
+echo ' '                                                                                        >> $readme_txt
+echo '2. If the virtual machine definition already exists, please delete it: '                  >> $readme_txt
+echo "   /bin/virsh undefine $vm_name"                                                          >> $readme_txt
+echo ' '                                                                                        >> $readme_txt
+echo "3. It is highly preferred that the directory paths be identical on all KVM hosts."        >> $readme_txt
+echo "   If the directory paths are not identical on the source and targer machines,"           >> $readme_txt
+echo "   you must manually edit the $vm_name.xml file before the next step."                    >> $readme_txt
+echo ' '                                                                                        >> $readme_txt
+echo '4. Create the virtual machine definition: '                                               >> $readme_txt
+echo "   /bin/virsh define --file $local_backupdir/$vm_name/$yyyymmdd/$vm_name.xml"             >> $readme_txt
+echo ' '                                                                                        >> $readme_txt
+echo '5. If the *.qcow2 file is gzipped, uncompress the file: '                                 >> $readme_txt
+echo "   cd $local_backupdir/$vm_name/$yyyymmdd "                                               >> $readme_txt
+echo '   find . -type f -name "*.qcow2.gz" -exec gunzip {} \; '                                 >> $readme_txt
+echo ' '                                                                                        >> $readme_txt
+echo '6. Copy the *.qcow2 disk image file to the appropriate directory: '                       >> $readme_txt
+echo "   cp $local_backupdir/$vm_name/$yyyymmdd/*.qcow2 $local_vmdir/ "                         >> $readme_txt
+echo ' '                                                                                        >> $readme_txt
+echo '7. If desired, startup the virtual machine. NOTE: due to duplicate MAC addresses,'        >> $readme_txt
+echo '   do not start up the standby VM if the primary VM is still running!'                    >> $readme_txt
+echo "   /bin/virsh start $vm_name "                                                            >> $readme_txt
+echo "   sleep 30 "                                                                             >> $readme_txt
+echo '   /bin/virsh list --all '                                                                >> $readme_txt
+echo "   /bin/virsh dominfo $vm_name "                                                          >> $readme_txt  
+echo ' '                                                                                        >> $readme_txt
 
 
 
@@ -348,10 +349,10 @@ if [[ "$backup_to_local_dir" == "yes" ]]; then
    fi
    test -f "$local_backupdir/$vm_name/$yyyymmdd/testfile.tmp" && rm -f "$local_backupdir/$vm_name/$yyyymmdd/testfile.tmp"
    #
-   # delete local backup copies more than 30 days old
+   # delete local backup copies more than $maxage_days days old
    #
-   echo Deleting any local backups older than 30 days from $local_backupdir/$vm_name/ | $tee $logfile
-   cmd="   find $local_backupdir/$vm_name -type f -mtime +30 -exec echo rm {} \;" | $tee $logfile
+   echo Deleting any local backups older than $maxage_days days from $local_backupdir/$vm_name/ | $tee $logfile
+   cmd="   find $local_backupdir/$vm_name -type f -mtime +$maxage_days -exec echo rm {} \;"     | $tee $logfile
    echo "$cmd"  | $tee $logfile
    eval "$cmd" 
    # delete any empty subdirectories after deleting old files
@@ -459,13 +460,14 @@ if [[ "$backup_to_remote_scp" == "yes" ]]; then
    echo "   $cmd"  | $tee $logfile
    eval "   $cmd" 
    #
-   # delete remote backups more than 30 days old
-   echo Deleting any remote backups older than 30 days from $remote_host:$remote_scp_backupdir | $tee $logfile
-   cmd="ssh $remote_host \"find $remote_scp_backupdir -type f -mtime +30 -print -exec rm {} \;\""
+   # delete remote backups more than $maxage_days days old
+   echo Deleting any remote backups older than $maxage_days days from $remote_host:$remote_scp_backupdir/$vm_name | $tee $logfile
+   cmd="ssh $remote_host \"find $remote_scp_backupdir/$vm_name -type f -mtime +$maxage_days -print -exec rm {} \;\""
    echo "   $cmd"  | $tee $logfile
    eval "   $cmd" 
    # delete any empty subdirectories after deleting old files
-   cmd="ssh $remote_host \"find $remote_scp_backupdir -type d -empty -delete\""
+   # use -mindepth 1 parameter to delete subdirectories, but not the top-level $vm_name directory
+   cmd="ssh $remote_host \"find $remote_scp_backupdir/$vm_name -mindepth 1 -type d -empty -delete\""
    echo "   $cmd"  | $tee $logfile
    eval "   $cmd" 
    #
@@ -489,6 +491,7 @@ if [[ "$backup_to_remote_scp" == "yes" ]]; then
       #
       # use tar over ssh instead of just scp because tar can keep the thin provisioned sparse file without expanding to thick provisioning
       cd $local_backupdir/$vm_name/$yyyymmdd
+      echo "Sending $local_backupdir/$vm_name/$yyyymmdd/*.qcow2" to remote host $remote_host via tar-over-ssh to preserve thin provisioning" | $tee $logfile
       tar -Scf - *.qcow2 | ssh $remote_host "tar -Sxf - -C $remote_scp_backupdir/$vm_name/$yyyymmdd/"
       date_stamp=`date "+%Y-%m-%d %H:%M:%S"`
       echo Finished copying backup to remote SSH/SCP host  at $date_stamp | $tee $logfile
@@ -585,12 +588,12 @@ if [[ "$backup_to_remote_nfs" == "yes" ]]; then
          echo "ERROR: could not create remote NFS directory $remote_nfs_backupdir/$vm_name/$yyyymmdd , please check permissions" | mail -s "`hostname` $host_name:$0 backup job error" $sysadmin
       fi
       #
-      # delete any remote NFS backup copies more than 30 days old
+      # delete any remote NFS backup copies more than $maxage_days days old
       #
       if [[ ! -d "$remote_nfs_backupdir/$vm_name" ]]; then
-         echo Deleting any remote NFS backups older than 30 days from $remote_nfs_backupdir/$vm_name/ | $tee $logfile
-         find $remote_nfs_backupdir/$vm_name -type f -mtime +30 -exec echo rm {} \; | $tee $logfile
-         find $remote_nfs_backupdir/$vm_name -type f -mtime +30 -exec      rm {} \;
+         echo Deleting any remote NFS backups older than $maxage_days days from $remote_nfs_backupdir/$vm_name/ | $tee $logfile
+         find $remote_nfs_backupdir/$vm_name -type f -mtime +$maxage_days -exec echo rm {} \; | $tee $logfile
+         find $remote_nfs_backupdir/$vm_name -type f -mtime +$maxage_days -exec      rm {} \;
          # delete any empty subdirectories after deleting old files
          find $remote_nfs_backupdir/$vm_name -type d -empty -print -delete
       fi
