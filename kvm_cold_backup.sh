@@ -230,7 +230,6 @@ echo ' '                                                                        
 #
 # Power down the VM
 #
-#
 # confirm VM name is correct
 # Note that we use grep with the ^$ anchors to avoid greedy matches of similar hostnames
 vm_exists=unknown
@@ -250,7 +249,7 @@ if [[ "$vm_exists" == "unknown" ]]; then
    exit
 fi
 #
-#confirm current VM state is "running", then try to shutdown
+# confirm current VM state is "running", then try to shutdown
 #
 vm_state=unknown
 vm_restart=unknown
@@ -489,7 +488,7 @@ if [[ "$backup_to_remote_scp" == "yes" ]]; then
       scp $local_backupdir/$vm_name/$yyyymmdd/*.txt $remote_host:$remote_scp_backupdir/$vm_name/$yyyymmdd
       scp $local_backupdir/$vm_name/$yyyymmdd/*.log $remote_host:$remote_scp_backupdir/$vm_name/$yyyymmdd
       #
-      # use tar over ssh instead of just scp because tar can keep the thin provisioned sparse file without expanding to thick provisioning
+      # For the large QCOW2 files, use tar-over-ssh instead of scp because tar can keep the thin provisioned sparse file without expanding to thick provisioning
       cd $local_backupdir/$vm_name/$yyyymmdd
       echo "Sending $local_backupdir/$vm_name/$yyyymmdd/*.qcow2" to remote host $remote_host via tar-over-ssh to preserve thin provisioning" | $tee $logfile
       tar -Scf - *.qcow2 | ssh $remote_host "tar -Sxf - -C $remote_scp_backupdir/$vm_name/$yyyymmdd/"
@@ -617,7 +616,7 @@ if [[ "$backup_to_remote_nfs" == "yes" ]]; then
       cmd="   cp $local_backupdir/$vm_name/$yyyymmdd/*.txt $remote_nfs_backupdir/$vm_name/$yyyymmdd" ; echo "$cmd" | $tee $logfile ; eval "$cmd"
       cmd="   cp $local_backupdir/$vm_name/$yyyymmdd/*.log $remote_nfs_backupdir/$vm_name/$yyyymmdd" ; echo "$cmd" | $tee $logfile ; eval "$cmd"
       #
-      # use tar instead of just cp because tar can keep the thin provisioned sparse file without expanding to thick provisioning
+      # For the large QCOW2 files, use tar-over-ssh instead of scp because tar can keep the thin provisioned sparse file without expanding to thick provisioning
       echo Copying large virtual disk images using tar to keep thin provisioned sparse files
       cmd="   cd $local_backupdir/$vm_name/$yyyymmdd ; tar -Scf - *.qcow2 | tar -Sxf - -C \"$remote_nfs_backupdir/$vm_name/$yyyymmdd/\""
       echo "$cmd"  | $tee $logfile
@@ -642,8 +641,6 @@ if [[ "$backup_to_remote_nfs" == "yes" ]]; then
       fi
       #
       # For the large QCOW2 files, use tar instead of just cp because tar can keep the thin provisioned sparse file without expanding to thick provisioning
-      # 
-      #
       echo "Copying virtual disk files to $remote_nfs_backupdir/$vm_name/$yyyymmdd/*.qcow2" | $tee $logfile
       #
       # figure out the filenames for the virtual disk image(s) assigned to this VM
